@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { margin:0; padding:20px; font-family:"Consolas","Monaco","Microsoft YaHei UI","Microsoft YaHei",monospace,sans-serif; font-size:14px; }
+        .container { display:flex; height:90vh; gap:20px; }
+        .left, .right { flex:1; overflow-y:auto; padding:10px; border:1px solid #ccc; }
+        .line { margin-bottom:6px; line-height: 1.4; }
+        .l0 { margin-left:0; }
+        .l1 { margin-left:2em; }
+        .l2 { margin-left:4em; }
+        .l3 { margin-left:6em; }
+        .l4 { margin-left:8em; }
+        .copy-all-btn { margin-left:0px; width:1.2em; height:16px; line-height:16px; padding:0; text-align:center; }
+        button { cursor:pointer; margin:0 2px; padding:0 3px; font-family:"Consolas","Monaco","Microsoft YaHei UI","Microsoft YaHei",monospace,sans-serif; border:1px solid #ccc; background:#f5f5f5; }
+        a { color:blue; text-decoration:none; cursor:pointer; }
+        a:hover { text-decoration:underline; }
+        .highlight { background-color:yellow; animation: highlightFade 2s forwards; }
+        @keyframes highlightFade {
+            0% { background-color: yellow; }
+            100% { background-color: transparent; }
+        }
+        .multiline { white-space: pre-line; margin-left: 4em; line-height: 1.4; }
+        .list-btn { margin-right: 2px; }
+        .spacer { margin-top: 10px; }
+        .journal-item, .article-item { margin-bottom: 8px; line-height: 1.5; }
+        .copy-content { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 左栏：期刊信息 -->
+        <div class="left" id="left-panel">
+            <div class="spacer"></div>
+            <div class="journal-item" id="journal-ACM">
+              <button class="list-btn" onclick="copyLine(this)">-</button>
+              <span class="journal-name">ACM</span>
+            </div>
+            <div class="line l1">名称<button onclick="copyValue(this)">:</button>ACM计算概览</div>
+            <div class="line l1">文章</div>
+            <div class="line l2">
+              <button class="list-btn" onclick="copyLine(this)">-</button>
+              <a onclick="scrollToArticle('神经网络崛起')">神经网络崛起</a>
+            </div>
+            <div class="line l2">
+              <button class="list-btn" onclick="copyLine(this)">-</button>
+              <a onclick="scrollToArticle('量子计算综述')">量子计算综述</a>
+            </div>
+            <div class="spacer"></div>
+            <div class="journal-item" id="journal-IEEE">
+              <button class="list-btn" onclick="copyLine(this)">-</button>
+              <span class="journal-name">IEEE</span>
+            </div>
+            <div class="line l1">名称<button onclick="copyValue(this)">:</button>IEEE汇刊</div>
+            <div class="line l1">文章</div>
+            <div class="line l2">
+              <button class="list-btn" onclick="copyLine(this)">-</button>
+              <a onclick="scrollToArticle('5G网络安全')">5G网络安全</a>
+            </div>
+            <div class="line l2">
+              <button class="list-btn" onclick="copyLine(this)">-</button>
+              <a onclick="scrollToArticle('物联网协议分析')">物联网协议分析</a>
+            </div>
+            <div class="spacer"></div>
+            <div class="journal-item" id="journal-Nature">
+              <button class="list-btn" onclick="copyLine(this)">-</button>
+              <span class="journal-name">Nature</span>
+            </div>
+            <div class="line l1">名称<button onclick="copyValue(this)">:</button>自然通讯</div>
+            <div class="line l1">文章</div>
+            <div class="line l2">
+              <button class="list-btn" onclick="copyLine(this)">-</button>
+              <a onclick="scrollToArticle('基因编辑进展')">基因编辑进展</a>
+            </div>
+        </div>
+        
+        <!-- 右栏：文章信息 -->
+        <div class="right" id="right-panel">
+            <div class="spacer"></div>
+            <div class="article-item" id="神经网络崛起">
+              <button class="list-btn" onclick="copyLine(this)">-</button>
+              <span class="article-title">神经网络崛起</span>
+            </div>
+            <div class="line l1">标题<button onclick="copyValue(this)">:</button>神经网络崛起</div>
+            <div class="line l1">年份<button onclick="copyValue(this)">:</button>2023</div>
+            <div class="line l1">期刊<button onclick="copyValue(this)">:</button><a onclick="scrollToJournal('ACM')">ACM</a></div>
+            <div class="line l1">DOI<button onclick="copyValue(this)">:</button>10.1145/123456</div>
+            <div class="line l1">作者
+              <button class="copy-all-btn" onclick="copyAllItems(this, '、')" data-items='["张三", "李四"]'>、</button>
+              <button class="copy-all-btn" onclick="copyAllItems(this, '，')" data-items='["张三", "李四"]'>，</button>
+              <button class="copy-all-btn" onclick="copyAllItems(this, '；')" data-items='["张三", "李四"]'>；</button>
+              <button class="copy-all-btn" onclick="copyAllItems(this, ', ')" data-items='["张三", "李四"]'>, </button>
+              <button class="copy-all-btn" onclick="copyAllItems(this, '; ')" data-items='["张三", "李四"]'>; </button>
+            </div>
+            <div class="line l2">
+              <button class="list-btn" onclick="copyLine(this)">-</button>
+              <span class="sub-item">张三</span>
+            </div>
+            <div class="line l3">第一作者<button onclick="copyValue(this)">:</button>是</div>
+            <div class="line l3">单位<button onclick="copyValue(this)">:</button>清华大学</div>
+            <div class="line l2">
+              <button class="list-btn" onclick="copyLine(this)">-</button>
+              <span class="sub-item">李四</span>
+            </div>
+            <div class="line l3">第一作者<button onclick="copyValue(this)">:</button>否</div>
+            <div class="line l3">单位<button onclick="copyValue(this)">:</button>北京大学</div>
+            <div class="line l1">关键词
+              <button class="copy-all-btn" onclick="copyAllItems(this, '、')" data-items='["神经网络", "深度学习", "人工智能"]'>、</button>
+              <button class="copy-all-btn" onclick="copyAllItems(this, '，')" data-items='["神经网络", "深度学习", "人工智能"]'>，</button>
+              <button class="copy-all-btn" onclick="copyAllItems(this, '；')" data-items='["神经网络", "深度学习", "人工智能"]'>；</button>
+              <button class="copy-all-btn" onclick="copyAllItems(this, ', ')" data-items='["神经网络", "深度学习", "人工智能"]'>, </button>
+              <button class="copy-all-btn" onclick="copyAllItems(this, '; ')" data-items='["神经网络", "深度学习", "人工智能"]'>; </button>
+            </div>
+            <div class="line l2">
+              <button class="list-btn" onclick="copyLine(this)">-</button>
+              <span class="list-item">神经网络</span>
+            </div>
+            <div class="line l2">
+              <button class="list-btn" onclick="copyLine(this)">-</button>
+              <span class="list-item">深度学习</span>
+            </div>
+            <div class="line l2">
+              <button class="list-btn" onclick="copyLine(this)">-</button>
+              <span class="list-item">人工智能</span>
+            </div>
+            <div class="line l1">摘要<button onclick="copyAbstract(this)">:</button></div>
+            <div class="line l2 multiline">本文系统回顾了神经网络近年来的发展历程。
+从早期的感知机模型到如今的深度学习架构，
+神经网络在计算机视觉、自然语言处理等领域
+取得了突破性进展。研究重点包括卷积神经网络、
+循环神经网络、注意力机制等核心技术的演进。</div>
+            <div class="spacer"></div>
+            <div class="article-item" id="量子计算综述">
+              <button class="list-btn" onclick="copyLine(this)">-</button>
+              <span class="article-title">量子计算综述</span>
+            </div>
+            <div class="line l1">标题<button onclick="copyValue(this)">:</button>量子计算综述</div>
+            <div class="line l1">年份<button onclick="copyValue(this)">:</button>2022</div>
+            <div class="line l1">期刊<button onclick="copyValue(this)">:</button><a onclick="scrollToJournal('ACM')">ACM</a></div>
+            <div class="spacer"></div>
+            <div class="article-item" id="5G网络安全">
+              <button class="list-btn" onclick="copyLine(this)">-</button>
+              <span class="article-title">5G网络安全</span>
+            </div>
+            <div class="line l1">标题<button onclick="copyValue(this)">:</button>5G网络安全</div>
+            <div class="line l1">年份<button onclick="copyValue(this)">:</button>2021</div>
+            <div class="line l1">期刊<button onclick="copyValue(this)">:</button><a onclick="scrollToJournal('IEEE')">IEEE</a></div>
+            <div class="spacer"></div>
+            <div class="article-item" id="物联网协议分析">
+              <button class="list-btn" onclick="copyLine(this)">-</button>
+              <span class="article-title">物联网协议分析</span>
+            </div>
+            <div class="line l1">标题<button onclick="copyValue(this)">:</button>物联网协议分析</div>
+            <div class="line l1">年份<button onclick="copyValue(this)">:</button>2020</div>
+            <div class="line l1">期刊<button onclick="copyValue(this)">:</button><a onclick="scrollToJournal('IEEE')">IEEE</a></div>
+            <div class="spacer"></div>
+            <div class="article-item" id="基因编辑进展">
+              <button class="list-btn" onclick="copyLine(this)">-</button>
+              <span class="article-title">基因编辑进展</span>
+            </div>
+            <div class="line l1">标题<button onclick="copyValue(this)">:</button>基因编辑进展</div>
+            <div class="line l1">年份<button onclick="copyValue(this)">:</button>2023</div>
+            <div class="line l1">期刊<button onclick="copyValue(this)">:</button><a onclick="scrollToJournal('Nature')">Nature</a></div>
+        </div>
+    </div>
+    
+    <script>
+        let copyTimeouts = new Map();
+        
+        function copyValue(button) {
+            const line = button.parentElement;
+            let text = "";
+            
+            let node = button.nextSibling;
+            while (node) {
+                if (node.nodeType === 3) {
+                    text += node.textContent;
+                } else if (node.nodeType === 1 && node.tagName === 'A') {
+                    text += node.textContent;
+                } else if (node.nodeType === 1 && node.tagName === 'SPAN') {
+                    text += node.textContent;
+                }
+                node = node.nextSibling;
+            }
+            
+            text = text.trim();
+            
+            navigator.clipboard.writeText(text).then(() => {
+                if (copyTimeouts.has(button)) {
+                    clearTimeout(copyTimeouts.get(button));
+                }
+                
+                const originalText = button.textContent;
+                button.textContent = '#';
+                
+                const timeoutId = setTimeout(() => {
+                    button.textContent = originalText;
+                    copyTimeouts.delete(button);
+                }, 1000);
+                
+                copyTimeouts.set(button, timeoutId);
+            });
+        }
+        
+        function copyLine(button) {
+            // 找到按钮所在的容器
+            const container = button.parentElement;
+            
+            // 找到容器中要复制的实际内容
+            let text = "";
+            let contentFound = false;
+            
+            // 遍历所有子节点
+            for (let child of container.children) {
+                if (child === button) continue;  // 跳过按钮本身
+                
+                if (child.classList && child.classList.contains('copy-content')) {
+                    // 如果有隐藏的复制内容元素，直接使用它
+                    text = child.textContent.trim();
+                    contentFound = true;
+                    break;
+                }
+                
+                if (child.tagName === 'A' || child.tagName === 'SPAN') {
+                    text = child.textContent.trim();
+                    contentFound = true;
+                    break;
+                }
+            }
+            
+            // 如果没有找到特定的内容元素，则提取所有文本内容
+            if (!contentFound) {
+                // 收集所有文本节点
+                const walker = document.createTreeWalker(
+                    container,
+                    NodeFilter.SHOW_TEXT,
+                    null,
+                    false
+                );
+                
+                let nodes = [];
+                let node = walker.nextNode();
+                while (node) {
+                    const trimmed = node.textContent.trim();
+                    if (trimmed) {
+                        nodes.push(trimmed);
+                    }
+                    node = walker.nextNode();
+                }
+                
+                // 合并文本节点，跳过按钮前的文本
+                for (let i = 0; i < nodes.length; i++) {
+                    if (!nodes[i].includes('-') && nodes[i] !== ':') {
+                        text = nodes[i];
+                        break;
+                    }
+                }
+            }
+            
+            navigator.clipboard.writeText(text).then(() => {
+                if (copyTimeouts.has(button)) {
+                    clearTimeout(copyTimeouts.get(button));
+                }
+                
+                const originalText = button.textContent;
+                button.textContent = '#';
+                
+                const timeoutId = setTimeout(() => {
+                    button.textContent = originalText;
+                    copyTimeouts.delete(button);
+                }, 1000);
+                
+                copyTimeouts.set(button, timeoutId);
+            });
+        }
+        
+        function copyAbstract(button) {
+            const line = button.parentElement;
+            const abstractDiv = line.nextElementSibling;
+            
+            if (abstractDiv && abstractDiv.classList.contains('multiline')) {
+                const text = abstractDiv.textContent.trim();
+                
+                navigator.clipboard.writeText(text).then(() => {
+                    if (copyTimeouts.has(button)) {
+                        clearTimeout(copyTimeouts.get(button));
+                    }
+                    
+                    const originalText = button.textContent;
+                    button.textContent = '#';
+                    
+                    const timeoutId = setTimeout(() => {
+                        button.textContent = originalText;
+                        copyTimeouts.delete(button);
+                    }, 1000);
+                    
+                    copyTimeouts.set(button, timeoutId);
+                });
+            }
+        }
+        
+        function copyAllItems(button, separator) {
+            // 从data-items属性获取JSON数组
+            const itemsJson = button.getAttribute('data-items');
+            
+            if (itemsJson) {
+                try {
+                    // 解析JSON数组
+                    const itemsArray = JSON.parse(itemsJson);
+                    const combinedText = itemsArray.join(separator);
+                    
+                    navigator.clipboard.writeText(combinedText).then(() => {
+                        if (copyTimeouts.has(button)) {
+                            clearTimeout(copyTimeouts.get(button));
+                        }
+                        
+                        const originalText = button.textContent;
+                        button.textContent = '#';
+                        
+                        const timeoutId = setTimeout(() => {
+                            button.textContent = originalText;
+                            copyTimeouts.delete(button);
+                        }, 1000);
+                        
+                        copyTimeouts.set(button, timeoutId);
+                    });
+                } catch (error) {
+                    console.error('解析items数据失败:', error);
+                }
+            }
+        }
+        
+        function scrollToArticle(articleId) {
+            const rightPanel = document.getElementById('right-panel');
+            const target = document.getElementById(articleId);
+            
+            if (target) {
+                document.querySelectorAll('.highlight').forEach(el => {
+                    el.classList.remove('highlight');
+                });
+                
+                target.classList.add('highlight');
+                rightPanel.scrollTop = target.offsetTop - 50;
+            }
+        }
+        
+        function scrollToJournal(journalName) {
+            const leftPanel = document.getElementById('left-panel');
+            const journalId = 'journal-' + journalName
+                .replace(/ /g, '_')  // 空格转下划线
+                .replace(/-/g, '_')  // 连字符转下划线
+                .replace(/[^\w]/g, '');  // 移除其他特殊字符
+            const target = document.getElementById(journalId);
+            
+            if (target) {
+                document.querySelectorAll('.highlight').forEach(el => {
+                    el.classList.remove('highlight');
+                });
+                
+                target.classList.add('highlight');
+                leftPanel.scrollTop = target.offsetTop - 50;
+            }
+        }
+        
+        document.addEventListener('animationend', function(event) {
+            if (event.animationName === 'highlightFade') {
+                event.target.classList.remove('highlight');
+            }
+        });
+    </script>
+</body>
+</html>
