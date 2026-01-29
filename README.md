@@ -6,6 +6,8 @@ CtrlCV 可从 YAML 文献库里复制纯文本信息到剪贴板。
 
 左栏期刊，右栏论文。按 `-` 或者 `:`，复制一条信息。按分隔符按钮，拼接列表再复制。
 
+[示例在此](https://mikumikunisiteageru.github.io/CtrlCV/ExCiting.html)。
+
 ## 用法
 
 ### 1. 安装依赖
