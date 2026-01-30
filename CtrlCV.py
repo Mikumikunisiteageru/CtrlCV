@@ -19,6 +19,93 @@ def sanitize_id(text):
     """将文本转换为有效的HTML ID"""
     return re.sub(r'[^\w\-]', '', text.replace(' ', '_').replace('-', '_'))
 
+def parse_yaml_data(data, indent_level=0, context=None):
+    """递归解析YAML数据为HTML，基于数据类型而非key名"""
+    html_lines = []
+    
+    if isinstance(data, list):
+        # 处理列表
+        for item in data:
+            if isinstance(item, dict):
+                # 列表中的字典项
+                for key, value in item.items():
+                    html_lines.append(f'<div class="line l{indent_level}">')
+                    html_lines.append(f'  <button class="list-btn" onclick="copyLine(this)">-</button>')
+                    html_lines.append(f'  <span class="dict-key">{key}</span>')
+                    html_lines.append(f'</div>')
+                    
+                    # 递归处理字典值
+                    html_lines.extend(parse_yaml_data(value, indent_level+1, key))
+                    
+            elif isinstance(item, str):
+                # 简单字符串列表项
+                html_lines.append(f'<div class="line l{indent_level}">')
+                html_lines.append(f'  <button class="list-btn" onclick="copyLine(this)">-</button>')
+                html_lines.append(f'  <span class="list-item">{item}</span>')
+                html_lines.append(f'</div>')
+    
+    elif isinstance(data, dict):
+        # 处理字典
+        for key, value in data.items():
+            if isinstance(value, dict):
+                # 嵌套字典：显示key，递归处理value
+                html_lines.append(f'<div class="line l{indent_level}">{key}</div>')
+                html_lines.extend(parse_yaml_data(value, indent_level+1, key))
+                
+            elif isinstance(value, list):
+                # 处理列表值
+                if value and all(isinstance(item, str) for item in value):
+                    # 纯字符串列表：添加复制全部按钮
+                    items_json = json.dumps(value, ensure_ascii=False)
+                    html_lines.append(f'<div class="line l{indent_level}">{key}')
+                    separators = ['、', '，', '；', ', ', '; ']
+                    for sep in separators:
+                        html_lines.append(f'  <button class="copy-all-btn" onclick="copyAllItems(this, \'{sep}\')" data-items=\'{items_json}\'>{sep}</button>')                              
+                    html_lines.append(f'</div>')
+                else:
+                    # 复杂列表：只显示key
+                    html_lines.append(f'<div class="line l{indent_level}">{key}</div>')
+                
+                # 递归处理列表内容
+                html_lines.extend(parse_yaml_data(value, indent_level+1, key))
+                
+            elif isinstance(value, str):
+                # 字符串值：检测是否需要多行显示
+                if '\n' in value:
+                    # 多行文本
+                    cleaned_value = value.strip()
+                    html_lines.append(f'<div class="line l{indent_level}">{key}<button class="copy-value-btn" onclick="copyAbstract(this)">:</button></div>')
+                    html_lines.append(f'<div class="line l{indent_level+1} multiline">{cleaned_value}</div>')
+                else:
+                    # 单行文本
+                    # 特殊处理"期刊"和"文章"键
+                    if key == "期刊" and context != "期刊":
+                        # 文章中的期刊链接
+                        html_lines.append(f'<div class="line l{indent_level}">{key}<button class="copy-value-btn" onclick="copyValue(this)">:</button><a onclick="scrollToJournal(\'{value}\')">{value}</a></div>')
+                    elif key == "文章" and context == "期刊":
+                        # 期刊中的文章链接
+                        html_lines.append(f'<div class="line l{indent_level}">{key}</div>')
+                        # 这里不需要再递归，因为value是字符串
+                        html_lines.append(f'<div class="line l{indent_level+1}">')
+                        html_lines.append(f'  <button class="list-btn" onclick="copyLine(this)">-</button>')
+                        html_lines.append(f'  <a onclick="scrollToArticle(\'{sanitize_id(value)}\')">{value}</a>')
+                        html_lines.append(f'</div>')
+                    else:
+                        # 普通键值对
+                        html_lines.append(f'<div class="line l{indent_level}">{key}<button class="copy-value-btn" onclick="copyValue(this)">:</button>{value}</div>')
+            else:
+                # 其他类型（数字等）
+                html_lines.append(f'<div class="line l{indent_level}">{key}<button class="copy-value-btn" onclick="copyValue(this)">:</button>{value}</div>')
+    
+    elif isinstance(data, str):
+        # 独立的字符串（不应该出现，但保留处理）
+        html_lines.append(f'<div class="line l{indent_level}">')
+        html_lines.append(f'  <button class="list-btn" onclick="copyLine(this)">-</button>')
+        html_lines.append(f'  <span>{data}</span>')
+        html_lines.append(f'</div>')
+    
+    return html_lines
+
 def parse_journal(journal_data):
     """解析期刊数据"""
     html_lines = []
@@ -35,26 +122,8 @@ def parse_journal(journal_data):
                     html_lines.append(f'  <span class="journal-name">{journal_name}</span>')
                     html_lines.append(f'</div>')
                     
-                    if isinstance(journal_info, dict):
-                        for key, value in journal_info.items():
-                            if key == '文章':
-                                html_lines.append(f'<div class="line l1">{key}</div>')
-                                for article in value:
-                                    if isinstance(article, dict):
-                                        for article_title, _ in article.items():
-                                            article_id = sanitize_id(article_title)
-                                            html_lines.append(f'<div class="line l2">')
-                                            html_lines.append(f'  <button class="list-btn" onclick="copyLine(this)">-</button>')
-                                            html_lines.append(f'  <a onclick="scrollToArticle(\'{article_id}\')">{article_title}</a>')
-                                            html_lines.append(f'</div>')
-                                    else:
-                                        article_id = sanitize_id(article)
-                                        html_lines.append(f'<div class="line l2">')
-                                        html_lines.append(f'  <button class="list-btn" onclick="copyLine(this)">-</button>')
-                                        html_lines.append(f'  <a onclick="scrollToArticle(\'{article_id}\')">{article}</a>')
-                                        html_lines.append(f'</div>')
-                            else:
-                                html_lines.append(f'<div class="line l1">{key}<button onclick="copyValue(this)">:</button>{value}</div>')
+                    # 使用通用解析器
+                    html_lines.extend(parse_yaml_data(journal_info, 1, "期刊"))
     
     return html_lines
 
@@ -74,58 +143,8 @@ def parse_paper(paper_data):
                     html_lines.append(f'  <span class="article-title">{paper_title}</span>')
                     html_lines.append(f'</div>')
                     
-                    if isinstance(paper_info, dict):
-                        for key, value in paper_info.items():
-                            if key == '摘要':
-                                html_lines.append(f'<div class="line l1">{key}<button onclick="copyAbstract(this)">:</button></div>')
-                                if isinstance(value, str):
-                                    cleaned_value = value.strip()
-                                    html_lines.append(f'<div class="line l2 multiline">{cleaned_value}</div>')
-                            elif key == '期刊':
-                                html_lines.append(f'<div class="line l1">{key}<button onclick="copyValue(this)">:</button><a onclick="scrollToJournal(\'{value}\')">{value}</a></div>')
-                            elif isinstance(value, list):
-                                # 收集所有下级item的文本
-                                item_texts = []
-                                for item in value:
-                                    if isinstance(item, dict):
-                                        # 字典：取第一个key作为文本
-                                        for sub_key, _ in item.items():
-                                            item_texts.append(sub_key)
-                                            break  # 只取第一个key
-                                    else:
-                                        # 字符串：直接添加
-                                        item_texts.append(str(item))
-                                # 创建列表项，包含多个复制按钮
-                                # 使用JSON格式存储，避免分号冲突
-                                items_json = json.dumps(item_texts, ensure_ascii=False)
-                                html_lines.append(f'<div class="line l1">{key}')
-                                # 五种连接符：全角顿号、全角逗号、全角分号、半角逗号、半角分号
-                                separators = ['、', '，', '；', ', ', '; ']
-                                for sep in separators:
-                                    html_lines.append(f'  <button class="copy-all-btn" onclick="copyAllItems(this, \'{sep}\')" data-items=\'{items_json}\'>{sep}</button>')                              
-                                html_lines.append(f'</div>')
-                                for item in value:
-                                    if isinstance(item, dict):
-                                        for sub_key, sub_value in item.items():
-                                            html_lines.append(f'<div class="line l2">')
-                                            html_lines.append(f'  <button class="list-btn" onclick="copyLine(this)">-</button>')
-                                            html_lines.append(f'  <span class="sub-item">{sub_key}</span>')
-                                            html_lines.append(f'</div>')
-                                            if isinstance(sub_value, dict):
-                                                for s_key, s_value in sub_value.items():
-                                                    html_lines.append(f'<div class="line l3">{s_key}<button onclick="copyValue(this)">:</button>{s_value}</div>')
-                                            elif isinstance(sub_value, str):
-                                                html_lines.append(f'<div class="line l3">值<button onclick="copyValue(this)">:</button>{sub_value}</div>')
-                                    else:
-                                        html_lines.append(f'<div class="line l2">')
-                                        html_lines.append(f'  <button class="list-btn" onclick="copyLine(this)">-</button>')
-                                        html_lines.append(f'  <span class="list-item">{item}</span>')
-                                        html_lines.append(f'</div>')
-                            elif isinstance(value, dict):
-                                for sub_key, sub_value in value.items():
-                                    html_lines.append(f'<div class="line l1">{sub_key}<button onclick="copyValue(this)">:</button>{sub_value}</div>')
-                            else:
-                                html_lines.append(f'<div class="line l1">{key}<button onclick="copyValue(this)">:</button>{value}</div>')
+                    # 使用通用解析器
+                    html_lines.extend(parse_yaml_data(paper_info, 1, "文章"))
     
     return html_lines
 
@@ -154,6 +173,7 @@ def generate_html(journals_yaml, papers_yaml):
         .l2 {{ margin-left:4em; }}
         .l3 {{ margin-left:6em; }}
         .l4 {{ margin-left:8em; }}
+        .copy-value-btn {{ margin: 0 8px; }}
         .copy-all-btn {{ margin-left:0px; width:1.2em; height:16px; line-height:16px; padding:0; text-align:center; }}
         button {{ cursor:pointer; margin:0 2px; padding:0 3px; font-family:"Consolas","Monaco","Microsoft YaHei UI","Microsoft YaHei",monospace,sans-serif; border:1px solid #ccc; background:#f5f5f5; }}
         a {{ color:blue; text-decoration:none; cursor:pointer; }}
