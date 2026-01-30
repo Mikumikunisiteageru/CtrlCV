@@ -5,9 +5,11 @@ import os
 import re
 import yaml
 
-def no_datetime_constructor(loader, node):
-    return loader.construct_scalar(node)
-yaml.SafeLoader.add_constructor('tag:yaml.org,2002:timestamp', no_datetime_constructor)
+class StringOnlyLoader(yaml.SafeLoader):
+    """只解析为字符串的Loader"""
+    pass
+
+StringOnlyLoader.yaml_implicit_resolvers = {}
 
 def load_yaml(file_path):
     """加载YAML文件，支持制表符缩进"""
@@ -17,7 +19,7 @@ def load_yaml(file_path):
     # 注意：YAML规范要求使用空格，但我们可以预处理转换
     content = content.replace('\t', '    ')
     # 使用safe_load解析
-    return yaml.load(content, Loader=yaml.SafeLoader)
+    return yaml.load(content, Loader=StringOnlyLoader)
 
 def sanitize_id(text):
     """将文本转换为有效的HTML ID"""
