@@ -53,18 +53,23 @@ def parse_yaml_data(data, indent_level=0, context=None):
                 html_lines.extend(parse_yaml_data(value, indent_level+1, key))
                 
             elif isinstance(value, list):
-                # 处理列表值
-                if value and all(isinstance(item, str) for item in value):
-                    # 纯字符串列表：添加复制全部按钮
-                    items_json = json.dumps(value, ensure_ascii=False)
-                    html_lines.append(f'<div class="line l{indent_level}">{key}')
-                    separators = ['、', '，', '；', ', ', '; ']
-                    for sep in separators:
-                        html_lines.append(f'  <button class="copy-all-btn" onclick="copyAllItems(this, \'{sep}\')" data-items=\'{items_json}\'>{sep}</button>')                              
-                    html_lines.append(f'</div>')
-                else:
+                item_texts = []
+                for item in value:
+                    if isinstance(item, dict):
+                        for sub_key, _ in item.items():
+                            item_texts.append(sub_key)
+                            break  # 只取第一个key（人名）
+                    else:
+                        item_texts.append(str(item))
+                items_json = json.dumps(item_texts, ensure_ascii=False)
+                html_lines.append(f'<div class="line l{indent_level}">{key}')
+                separators = ['、', '，', '；', ', ', '; ']
+                for sep in separators:
+                    html_lines.append(f'  <button class="copy-all-btn" onclick="copyAllItems(this, \'{sep}\')" data-items=\'{items_json}\'>{sep}</button>')                              
+                html_lines.append(f'</div>')
+                # else:
                     # 复杂列表：只显示key
-                    html_lines.append(f'<div class="line l{indent_level}">{key}</div>')
+                    # html_lines.append(f'<div class="line l{indent_level}">{key}</div>')
                 
                 # 递归处理列表内容
                 html_lines.extend(parse_yaml_data(value, indent_level+1, key))
@@ -213,41 +218,41 @@ def generate_html(journals_yaml, papers_yaml):
     <script>
         let copyTimeouts = new Map();
         
-		const divider = document.getElementById('divider');
-		const leftPanel = document.getElementById('left-panel');
-		const container = document.querySelector('.container');
+        const divider = document.getElementById('divider');
+        const leftPanel = document.getElementById('left-panel');
+        const container = document.querySelector('.container');
 
-		let isDragging = false;
+        let isDragging = false;
 
-		divider.addEventListener('mousedown', (e) => {{
-			isDragging = true;
-			document.body.style.cursor = 'col-resize';
-			document.body.style.userSelect = 'none';
-		}});
+        divider.addEventListener('mousedown', (e) => {{
+            isDragging = true;
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+        }});
 
-		document.addEventListener('mousemove', (e) => {{
-			if (!isDragging) return;
-			
-			const containerRect = container.getBoundingClientRect();
-			const mousePercent = ((e.clientX - containerRect.left) / containerRect.width) * 100;
-			
-			// 设置百分比限制
-			const minPercent = 20;  // 最小20%
-			const maxPercent = 80;  // 最大80%
-			
-			if (mousePercent >= minPercent && mousePercent <= maxPercent) {{
-				leftPanel.style.width = mousePercent + '%';
-				leftPanel.style.flex = 'none';
-			}}
-		}});
+        document.addEventListener('mousemove', (e) => {{
+            if (!isDragging) return;
+            
+            const containerRect = container.getBoundingClientRect();
+            const mousePercent = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+            
+            // 设置百分比限制
+            const minPercent = 20;  // 最小20%
+            const maxPercent = 80;  // 最大80%
+            
+            if (mousePercent >= minPercent && mousePercent <= maxPercent) {{
+                leftPanel.style.width = mousePercent + '%';
+                leftPanel.style.flex = 'none';
+            }}
+        }});
 
-		document.addEventListener('mouseup', () => {{
-			if (isDragging) {{
-				isDragging = false;
-				document.body.style.cursor = '';
-				document.body.style.userSelect = '';
-			}}
-		}});
+        document.addEventListener('mouseup', () => {{
+            if (isDragging) {{
+                isDragging = false;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }}
+        }});
 
         function copyValue(button) {{
             const line = button.parentElement;
