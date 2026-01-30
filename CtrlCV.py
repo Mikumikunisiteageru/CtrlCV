@@ -5,6 +5,10 @@ import os
 import re
 import yaml
 
+def no_datetime_constructor(loader, node):
+    return loader.construct_scalar(node)
+yaml.SafeLoader.add_constructor('tag:yaml.org,2002:timestamp', no_datetime_constructor)
+
 def load_yaml(file_path):
     """加载YAML文件，支持制表符缩进"""
     with open(file_path, 'r', encoding='utf-8') as f:
@@ -13,7 +17,7 @@ def load_yaml(file_path):
     # 注意：YAML规范要求使用空格，但我们可以预处理转换
     content = content.replace('\t', '    ')
     # 使用safe_load解析
-    return yaml.safe_load(content)
+    return yaml.load(content, Loader=yaml.SafeLoader)
 
 def sanitize_id(text):
     """将文本转换为有效的HTML ID"""
