@@ -170,8 +170,10 @@ def generate_html(journals_yaml, papers_yaml):
 <head>
     <style>
         body {{ margin:0; padding:20px; font-family:"Consolas","Monaco","Microsoft YaHei UI","Microsoft YaHei",monospace,sans-serif; font-size:14px; }}
-        .container {{ display:flex; height:90vh; gap:20px; }}
+        .container {{ display:flex; height:95vh; gap:0; }}
         .left, .right {{ flex:1; overflow-y:auto; padding:10px; border:1px solid #ccc; }}
+        .divider {{ width: 1px; background: #ccc; cursor: col-resize; flex: none; margin: 0; }}
+        .divider:hover {{ background: #999;}}
         .line {{ margin-bottom:6px; line-height: 1.4; }}
         .l0 {{ margin-left:0; }}
         .l1 {{ margin-left:2em; }}
@@ -201,7 +203,7 @@ def generate_html(journals_yaml, papers_yaml):
         <div class="left" id="left-panel">
             {newline.join(left_panel_html)}
         </div>
-        
+        <div class="divider" id="divider"></div>
         <!-- 右栏：文章信息 -->
         <div class="right" id="right-panel">
             {newline.join(right_panel_html)}
@@ -211,6 +213,42 @@ def generate_html(journals_yaml, papers_yaml):
     <script>
         let copyTimeouts = new Map();
         
+		const divider = document.getElementById('divider');
+		const leftPanel = document.getElementById('left-panel');
+		const container = document.querySelector('.container');
+
+		let isDragging = false;
+
+		divider.addEventListener('mousedown', (e) => {{
+			isDragging = true;
+			document.body.style.cursor = 'col-resize';
+			document.body.style.userSelect = 'none';
+		}});
+
+		document.addEventListener('mousemove', (e) => {{
+			if (!isDragging) return;
+			
+			const containerRect = container.getBoundingClientRect();
+			const mousePercent = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+			
+			// 设置百分比限制
+			const minPercent = 20;  // 最小20%
+			const maxPercent = 80;  // 最大80%
+			
+			if (mousePercent >= minPercent && mousePercent <= maxPercent) {{
+				leftPanel.style.width = mousePercent + '%';
+				leftPanel.style.flex = 'none';
+			}}
+		}});
+
+		document.addEventListener('mouseup', () => {{
+			if (isDragging) {{
+				isDragging = false;
+				document.body.style.cursor = '';
+				document.body.style.userSelect = '';
+			}}
+		}});
+
         function copyValue(button) {{
             const line = button.parentElement;
             let text = "";
