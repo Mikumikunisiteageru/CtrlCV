@@ -71,8 +71,15 @@ def parse_yaml_data(data, indent_level=0, context=None):
                     # 复杂列表：只显示key
                     # html_lines.append(f'<div class="line l{indent_level}">{key}</div>')
                 
-                # 递归处理列表内容
-                html_lines.extend(parse_yaml_data(value, indent_level+1, key))
+                if key == "文章" and context == "期刊":
+                    for article in value:
+                        article_id = sanitize_id(article)
+                        html_lines.append(f'<div class="line l{indent_level+1}">')
+                        html_lines.append(f'  <button class="list-btn" onclick="copyLine(this)">-</button>')
+                        html_lines.append(f'  <a onclick="scrollToArticle(\'{article_id}\')">{article}</a>')
+                        html_lines.append(f'</div>')
+                else:
+                    html_lines.extend(parse_yaml_data(value, indent_level+1, key))
                 
             elif isinstance(value, str):
                 # 字符串值：检测是否需要多行显示
@@ -91,14 +98,6 @@ def parse_yaml_data(data, indent_level=0, context=None):
                     elif key == "期刊" and context != "期刊":
                         # 文章中的期刊链接
                         html_lines.append(f'<div class="line l{indent_level}">{key}<button class="copy-value-btn" onclick="copyValue(this)">:</button><a onclick="scrollToJournal(\'{value}\')">{value}</a></div>')
-                    elif key == "文章" and context == "期刊":
-                        # 期刊中的文章链接
-                        html_lines.append(f'<div class="line l{indent_level}">{key}</div>')
-                        # 这里不需要再递归，因为value是字符串
-                        html_lines.append(f'<div class="line l{indent_level+1}">')
-                        html_lines.append(f'  <button class="list-btn" onclick="copyLine(this)">-</button>')
-                        html_lines.append(f'  <a onclick="scrollToArticle(\'{sanitize_id(value)}\')">{value}</a>')
-                        html_lines.append(f'</div>')
                     else:
                         # 普通键值对
                         html_lines.append(f'<div class="line l{indent_level}">{key}<button class="copy-value-btn" onclick="copyValue(this)">:</button>{value}</div>')
