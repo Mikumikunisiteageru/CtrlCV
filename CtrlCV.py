@@ -78,8 +78,12 @@ def parse_yaml_data(data, indent_level=0, context=None):
                     html_lines.append(f'<div class="line l{indent_level+1} multiline">{cleaned_value}</div>')
                 else:
                     # 单行文本
+                    # 检测是否为URL
+                    if value.startswith('https://') or value.startswith('http://'):
+                        # URL链接
+                        html_lines.append(f'<div class="line l{indent_level}">{key}<button class="copy-value-btn" onclick="copyValue(this)">:</button><a href="{value}" target="_blank">{value}</a></div>')
                     # 特殊处理"期刊"和"文章"键
-                    if key == "期刊" and context != "期刊":
+                    elif key == "期刊" and context != "期刊":
                         # 文章中的期刊链接
                         html_lines.append(f'<div class="line l{indent_level}">{key}<button class="copy-value-btn" onclick="copyValue(this)">:</button><a onclick="scrollToJournal(\'{value}\')">{value}</a></div>')
                     elif key == "文章" and context == "期刊":
@@ -93,6 +97,7 @@ def parse_yaml_data(data, indent_level=0, context=None):
                     else:
                         # 普通键值对
                         html_lines.append(f'<div class="line l{indent_level}">{key}<button class="copy-value-btn" onclick="copyValue(this)">:</button>{value}</div>')
+
             else:
                 # 其他类型（数字等）
                 html_lines.append(f'<div class="line l{indent_level}">{key}<button class="copy-value-btn" onclick="copyValue(this)">:</button>{value}</div>')
